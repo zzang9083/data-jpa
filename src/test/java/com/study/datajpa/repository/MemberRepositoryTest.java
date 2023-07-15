@@ -1,13 +1,17 @@
 package com.study.datajpa.repository;
 
+import com.study.datajpa.dto.MemberDto;
 import com.study.datajpa.entity.Member;
+import com.study.datajpa.entity.Team;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.*;
+
 
 
 @SpringBootTest
@@ -16,6 +20,9 @@ import static org.assertj.core.api.Assertions.*;
 class MemberRepositoryTest {
     @Autowired
     MemberRepository memberRepository;
+
+    @Autowired
+    TeamRepository teamRepository;
 
     @Test
     public void testMember() {
@@ -52,8 +59,59 @@ class MemberRepositoryTest {
 
         long deleteCount =memberRepository.count();
         assertThat(findMember1).isEqualTo(0);
+    }
 
+    @Test
+    public void findMemberDto() {
 
+        Team team = new Team("teamA");
+        teamRepository.save(team);
+
+        Member member1 = new Member("member1",10);
+        member1.setTeam(team);
+        memberRepository.save(member1);
+
+        List<MemberDto> memberDto = memberRepository.findMemberDto();
+        for(MemberDto dto : memberDto) {
+            System.out.println("dto ="+dto);
+        }
+    }
+
+    @Test
+    public void findByNames() {
+        Member member1 = new Member("member1");
+        Member member2 = new Member("member2");
+
+        memberRepository.save(member1);
+        memberRepository.save(member2);
+
+        List<Member> result = memberRepository.findByNames(Arrays.asList("member1","member2"));
+        for(Member m : result) {
+            System.out.println("member = "+ m);
+        }
+    }
+
+    @Test
+    public void returnType() {
+        Member member1 = new Member("member1");
+        Member member2 = new Member("member2");
+
+        memberRepository.save(member1);
+        memberRepository.save(member2);
+
+        /*** 컬렉션은 값이 없으면 빈 컬렉션, 그냥 객체는 값이 없으면 null**
+         *   List는 사이즈로 처리, 객체는 optional로 처리
+         * */
+
+        //주의 - result에 결과가 없다고 null이 아니다. 빈 컬렉션을 리턴한다. 주의할것
+        List<Member> result = memberRepository.findListByUsername("member1");
+        //result : 0
+        // if(result == null) 이런 코드 x
+        System.out.println(result.size());
+
+        // 주의 - findMember1에 결과가 없으면 null이다.
+        Member findMember1 = memberRepository.findMemberByUsername("member1");
+        Optional<Member> optionalMember1 = memberRepository.findOptionalMemberByUsername("member1");
 
     }
 }
