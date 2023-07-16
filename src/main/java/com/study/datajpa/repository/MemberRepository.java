@@ -4,6 +4,9 @@ import java.util.*;
 
 import com.study.datajpa.dto.MemberDto;
 import com.study.datajpa.entity.Member;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -41,12 +44,21 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     List<Member> findByNames(@Param("names") List<String> names);
     /**************************************************************************************************************/
 
-    /*******************************************반환타임***************************************************/
+    /************************************************반환타임********************************************************/
     //spring data-jpa는 다양한 형태로 반환타입을 설정할 수 있다.
     List<Member> findListByUsername(String username); // 컬렉션
     Member findMemberByUsername(String username); // 단건
     Optional<Member> findOptionalMemberByUsername(String username); // 단건 Optional
     /**************************************************************************************************************/
+
+    /************************************************페이징*********************************************************/
+    public Page<Member> findByAge(int age, Pageable pageable); // paging - 요청나간 page대로 페이징 쿼리
+
+    public Slice<Member> findByAgeSlice(int age, Pageable pageable); // slice - 요청나간거보다 하나 더 페이징 쿼리 : (
+
+
+    /**************************************************************************************************************/
+
 
 
 }
