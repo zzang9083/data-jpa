@@ -130,6 +130,10 @@ class MemberRepositoryTest {
         PageRequest pageRequest = PageRequest.of(0, 3, Sort.by(Sort.Direction.DESC,
                 "username"));
         Page<Member> page = memberRepository.findByAge(10, pageRequest);
+
+        //이런 식으로 paging을 유지하면서 dto형태로 바꿀 수 있다.(api는 dto로 바꿔줘야하기 때문에 유용하다.)
+        Page<MemberDto> tomap = page.map(member -> new MemberDto(member.getId(), member.getUserName(), null));
+
         //then
         List<Member> content = page.getContent(); //조회된 데이터
         assertThat(content.size()).isEqualTo(3); //조회된 데이터 수
