@@ -11,6 +11,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
+
+import javax.persistence.EntityManager;
+import javax.swing.text.html.parser.Entity;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.*;
@@ -26,6 +29,9 @@ class MemberRepositoryTest {
 
     @Autowired
     TeamRepository teamRepository;
+
+    @Autowired
+    EntityManager em;
 
     @Test
     public void testMember() {
@@ -142,5 +148,57 @@ class MemberRepositoryTest {
         assertThat(page.getTotalPages()).isEqualTo(2); //전체 페이지 번호
         assertThat(page.isFirst()).isTrue(); //첫번째 항목인가?
         assertThat(page.hasNext()).isTrue(); //다음 페이지가 있는가?
+    }
+
+    @Test
+    public void bulkUpdate() {
+        //given
+        memberRepository.save(new Member("member1",10));
+        memberRepository.save(new Member("member2",20));
+        memberRepository.save(new Member("member3",30));
+        memberRepository.save(new Member("member4",9));
+        memberRepository.save(new Member("member5",8));
+
+        //when
+        int resultCount = memberRepository.bulkAgePlus(20);
+
+        //then
+        assertThat(resultCount).isEqualTo(3);
+
+    }
+
+    @Test
+    public void finMemberLazy() {
+        //given
+        //member1 -> teamA
+        //member2 -> teamB
+
+        Team teamA = new Team("teamA");
+        Team teamB = new Team("teamB");
+        teamRepository.save(teamA);
+        teamRepository.save(teamB);
+        Member memberA = new Member("jung",10,teamA);
+        Member memberB = new Member("hoon",10,teamB);
+
+        memberRepository.save(memberA);
+        memberRepository.save(memberB);
+
+        em.flush();
+        em.clear();
+
+        //when
+        List<Member> all = memberRepository.findAll();
+
+        for(Member m : all) {
+            System.out.println("member: "+m.getUserName());
+            System.out.println("member: "+m.getTeam().getName()); // lazy하게 쿼리가 또 나간다.
+
+        }
+
+        //when
+        List<Member> fetchAll = memberRepository.findMemberFetchJoin();
+
+
+
     }
 }

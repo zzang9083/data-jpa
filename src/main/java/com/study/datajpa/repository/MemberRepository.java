@@ -7,7 +7,9 @@ import com.study.datajpa.entity.Member;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -66,6 +68,33 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     public Page<Member> findByAgeAddCount(int age, Pageable pageable); // paging - 요청나간 page대로 페이징 쿼리
     /**************************************************************************************************************/
 
+    /************************************************벌크성쿼리*********************************************************/
+    //주의사항 - bulk 연산 후에 업데이트 값을 참조하려하면 bulk 연산 전에 영속성 컨텍스트에 있는 값이 조회되기 때문에 변경 이전 값이 조회
+    //          될 것이다. 따라서 업데이트 연산 후에 변경된 값을 바로 사용하고자 한다면 em.clear() 영속성 컨텍스트를 날리는 작업을 꼭
+    //          해줘야한다.(날린다음에 조회하면 db에서 값을 조회해오기 때문에 업데이트된 값이 조회된다.)
+    //          아니면 Modifying 옵션에 clearAutomatically를 true로 주면 em.clear가 알아서 나간다.
+    @Modifying(clearAutomatically = true) //update와 같은 경우에 JPA의 executeUpdate를 수행하여 리턴을 int형으로 주려면 해당 어노테이션이 붙어야한다.
+    @Query("update Member m set m.age = m.age+1 where m.age >= :age")
+    int bulkAgePlus(@Param("age") int age);
+    /**************************************************************************************************************/
+
+    /************************************************fetch join*********************************************************/
+    @Query("select m from Member m left join fetch m.team")
+    List<Member> findMemberFetchJoin();
+
+    @Override
+    @EntityGraph(attributePaths = {"team"}) // fetch join을 안해줘도 알아서 객체를 터치할때 알아서 attribute값을 join을 해준다.(fetch join)
+    List<Member> findAll();
+
+    @EntityGraph(attributePaths = {"team"}) // jpql에 @EntityGraph를 넣어도 된다.
+    @Query("select m from Member m ")
+    List<Member> findMemberEntityGraph();
+
+    @EntityGraph(attributePaths = {"team"}) // NamedQuery에 @EntityGraph를 넣어도 된다.
+    List<Member> findEntityGraphByUsername(@Param("username") String username);
+
+
+    /**************************************************************************************************************/
 
 
 }
